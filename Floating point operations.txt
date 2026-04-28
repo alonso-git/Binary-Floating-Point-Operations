@@ -1,0 +1,5 @@
+Auxiliary functions:
+Text to binary (written decimal/binary to floating point binary number)
+Exponents normalization (to allow operations with mantissa)
+Mantissa normalization (to fix bit overflow and enforce 1.f format)
+Implicit bit addition (from f to 1.f format) 
