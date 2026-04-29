@@ -88,24 +88,22 @@ uint32_t reconstructMantissa(uint32_t ieeeValue) {
     return mant | (1u << 23);
 }
 
-    Normalization
+/*
+    Normalize mantissa and exponent in-place after operations
 */
-#include <cstdint>
-#include <bit>
-
-void normalizarMantisa(uint32_t& mantisa, int32_t& exponente) {
-    if (mantisa == 0) {
-        exponente = 0;
+void normalizeMantissa(uint32_t& mantissa, int32_t& exponent) {
+    if (mantissa == 0) {
+        exponent = 0;
         return;
     }
 
-    if (mantisa & (1 << 24)) {
-        mantisa >>= 1;
-        exponente++;
+    if (mantissa & (1 << 24)) {
+        mantissa >>= 1;
+        exponent++;
     } else {
-        while (mantisa > 0 && (mantisa & (1 << 23)) == 0) {
-            mantisa <<= 1;
-            exponente--;
+        while (mantissa > 0 && (mantissa & (1 << 23)) == 0) {
+            mantissa <<= 1;
+            exponent--;
         }
     }
 }
