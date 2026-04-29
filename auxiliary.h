@@ -40,4 +40,26 @@ uint32_t textToFloatingPointBinary(string decimalNumber) {
     return floatingBin;
 }
 
+/*
+    Normalization
+*/
+#include <cstdint>
+#include <bit>
+
+void normalizarMantisa(uint32_t& mantisa, int32_t& exponente) {
+    if (mantisa == 0) {
+        exponente = 0;
+        return;
+    }
+
+    if (mantisa & (1 << 24)) {
+        mantisa >>= 1;
+        exponente++;
+    } else {
+        while (mantisa > 0 && (mantisa & (1 << 23)) == 0) {
+            mantisa <<= 1;
+            exponente--;
+        }
+    }
+}
 #endif
