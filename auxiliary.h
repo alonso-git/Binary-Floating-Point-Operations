@@ -12,13 +12,18 @@
 #include <bit>
 #include <regex>
 #include <string>
+#include <cstring>
 
 using namespace std;
 
-// Constant values for convenience
 const uint32_t INF = 0x7F800000;
 const regex BIN_STR(R"(^0b[01]+$)");
 const regex DEC_STR(R"(^[0-9]*\.?[0-9]+$)");
+
+struct NormalizedMantissas {
+    uint32_t mantA; // 24-bit mantissa with implicit bit
+    uint32_t mantB;
+};
 
 /*
     Convert values
@@ -28,8 +33,11 @@ uint32_t textToFloatingPointBinary(string decimalNumber) {
 
     uint32_t floatingBin;
 
-    if (regex_match(decimalNumber, DEC_STR)) 
-        floatingBin = bit_cast<uint32_t>(stof(decimalNumber));
+    if (regex_match(decimalNumber, DEC_STR)) {
+        float f = stof(decimalNumber);
+        // Copy the float bit pattern into an integer without reinterpreting the type.
+        memcpy(&floatingBin, &f, sizeof(float));
+    }
 
     else if (regex_match(decimalNumber, BIN_STR)) 
         floatingBin = std::stoul(decimalNumber.substr(2), nullptr, 2);
@@ -38,6 +46,32 @@ uint32_t textToFloatingPointBinary(string decimalNumber) {
         return INF;
 
     return floatingBin;
+}
+
+/*
+    Align exponents for two IEEE-754 numbers
+*/
+NormalizedMantissas normalizeExponents(uint32_t numA, uint32_t numB) {
+    uint32_t expA = (numA >> 23) & 0xFF;
+    uint32_t mantA = numA & 0x7FFFFF;
+
+    uint32_t expB = (numB >> 23) & 0xFF;
+    uint32_t mantB = numB & 0x7FFFFF;
+
+    uint32_t fullMantA = (expA == 0) ? mantA : (mantA | (1 << 23));
+    uint32_t fullMantB = (expB == 0) ? mantB : (mantB | (1 << 23));
+
+    int d = static_cast<int>(expA) - static_cast<int>(expB);
+
+    if (d > 0) {
+        fullMantB >>= d;
+    } else if (d < 0) {
+        fullMantA >>= (-d);
+    }
+    NormalizedMantissas result;
+    result.mantA = fullMantA;
+    result.mantB = fullMantB;
+    return result;
 }
 
 #endif
