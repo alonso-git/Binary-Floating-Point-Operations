@@ -74,4 +74,18 @@ NormalizedMantissas normalizeExponents(uint32_t numA, uint32_t numB) {
     return result;
 }
 
+/*
+    Reconstruct the 24-bit mantissa for a 32-bit IEEE-754 number
+*/
+uint32_t reconstructMantissa(uint32_t ieeeValue) {
+    uint32_t exp = (ieeeValue >> 23) & 0xFF;
+    uint32_t mant = ieeeValue & 0x7FFFFF;
+
+    if (exp == 0) {
+        return mant;
+    }
+
+    return mant | (1u << 23);
+}
+
 #endif
