@@ -31,7 +31,7 @@ struct NormalizedMantissas {
 uint32_t textToFloatingPointBinary(string decimalNumber) {
     if (decimalNumber.length() < 1 ) return INF;
 
-    uint32_t floatingBin;
+    uint32_t floatingBin = INF;
 
     if (regex_match(decimalNumber, DEC_STR)) {
         float f = stof(decimalNumber);
