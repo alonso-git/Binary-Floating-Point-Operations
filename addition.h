@@ -20,6 +20,34 @@ struct IEEE754{
     }
 };
 
+void bitwiseSubtraction(uint32_t& a, uint32_t& b) {
+    while (b != 0) {
+        uint32_t borrow = (~a) & b;
+        
+        a = a ^ b;
+        
+        b = borrow << 1;
+    }
+}
+
+void bitwiseAddition(uint32_t& a, uint32_t& b) {
+    while (b != 0) {
+        uint32_t carry = a & b; 
+        a = a ^ b;
+        b = carry << 1;
+    }
+}
+
+uint8_t determineSharedExponent (IEEE754 numA, IEEE754 numB) {
+    return (numA.exponent > numB.exponent) ? numA.exponent : numB.exponent;
+}
+
+uint32_t reconstructNumberFromStruct(IEEE754 num) {
+    num.mantissa &= MANTISSA_MASK;
+
+    return (num.sign << 31 | num.exponent << 23 | num.mantissa );
+}
+
 uint32_t add(uint32_t numA, uint32_t numB) {
     IEEE754 a = IEEE754(numA);
     IEEE754 b = IEEE754(numB);
@@ -49,34 +77,6 @@ uint32_t add(uint32_t numA, uint32_t numB) {
     normalizeMantissa(a.mantissa, a.exponent);
     
     return reconstructNumberFromStruct(a);
-}
-
-void bitwiseSubtraction(uint32_t& a, uint32_t& b) {
-    while (b != 0) {
-        uint32_t borrow = (~a) & b;
-        
-        a = a ^ b;
-        
-        b = borrow << 1;
-    }
-}
-
-void bitwiseAddition(uint32_t& a, uint32_t& b) {
-    while (b != 0) {
-        uint32_t carry = a & b; 
-        a = a ^ b;
-        b = carry << 1;
-    }
-}
-
-uint8_t determineSharedExponent (IEEE754 numA, IEEE754 numB) {
-    return (numA.exponent > numB.exponent) ? numA.exponent : numB.exponent;
-}
-
-uint32_t reconstructNumberFromStruct(IEEE754 num) {
-    num.mantissa &= MANTISSA_MASK;
-
-    return (num.sign << 31 | num.exponent << 23 | num.mantissa );
 }
 
 #endif
