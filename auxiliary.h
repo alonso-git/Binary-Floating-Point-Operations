@@ -107,4 +107,57 @@ void normalizeMantissa(uint32_t& mantissa, int32_t& exponent) {
         }
     }
 }
+
+// Multiply two IEEE-754 32-bit values using explicit mantissa and exponent handling.
+uint32_t multiplyIEEE754(uint32_t numA, uint32_t numB) {
+    uint32_t signA = numA >> 31;
+    uint32_t signB = numB >> 31;
+    uint32_t sign = signA ^ signB;
+
+    uint32_t expA = (numA >> 23) & 0xFF;
+    uint32_t expB = (numB >> 23) & 0xFF;
+    uint32_t mantA = numA & 0x7FFFFF;
+    uint32_t mantB = numB & 0x7FFFFF;
+
+    if ((expA == 0 && mantA == 0) || (expB == 0 && mantB == 0)) {
+        return 0u;
+    }
+
+    if (expA == 255 || expB == 255) {
+        return INF;
+    }
+
+    uint32_t fullMantA = reconstructMantissa(numA);
+    uint32_t fullMantB = reconstructMantissa(numB);
+
+    int32_t biasedExpA = expA == 0 ? 1 : static_cast<int32_t>(expA);
+    int32_t biasedExpB = expB == 0 ? 1 : static_cast<int32_t>(expB);
+    int32_t resultExp = biasedExpA + biasedExpB - 127;
+
+    uint64_t product = static_cast<uint64_t>(fullMantA) * static_cast<uint64_t>(fullMantB);
+    uint32_t resultMant;
+
+    if (product & (1ull << 47)) {
+        resultMant = static_cast<uint32_t>(product >> 24);
+        resultExp++;
+    } else {
+        resultMant = static_cast<uint32_t>(product >> 23);
+    }
+
+    while (resultMant > 0 && (resultMant & (1u << 23)) == 0 && resultExp > 0) {
+        resultMant <<= 1;
+        resultExp--;
+    }
+
+    if (resultExp <= 0 || resultMant == 0) {
+        return 0u;
+    }
+    if (resultExp >= 255) {
+        return INF;
+    }
+
+    resultMant &= 0x7FFFFF;
+    return (sign << 31) | (static_cast<uint32_t>(resultExp) << 23) | resultMant;
+}
+
 #endif
