@@ -5,7 +5,6 @@
 #include "auxiliary.h"
 #include "addition.h"
 #include "division.h"
-// #include "multiplication.h"
 
 using namespace std;
 
@@ -73,7 +72,7 @@ int main() {
                     break;
                 }
                 case 3:
-                    // result = multiply(a, b);
+                    result = multiplyIEEE754(a, b);
                     cout << "\n[!] Multiplicacion aun no implementada." << endl;
                     break;
                 case 4:
