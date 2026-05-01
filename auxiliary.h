@@ -108,7 +108,8 @@ void normalizeMantissa(uint32_t& mantissa, int32_t& exponent) {
     }
 }
 
-uint32_t divideIEEE754(uint32_t numA, uint32_t numB) {
+// Multiply two IEEE-754 32-bit values using explicit mantissa and exponent handling.
+uint32_t multiplyIEEE754(uint32_t numA, uint32_t numB) {
     uint32_t signA = numA >> 31;
     uint32_t signB = numB >> 31;
     uint32_t sign = signA ^ signB;
@@ -118,18 +119,12 @@ uint32_t divideIEEE754(uint32_t numA, uint32_t numB) {
     uint32_t mantA = numA & 0x7FFFFF;
     uint32_t mantB = numB & 0x7FFFFF;
 
-    if ((expB == 0 && mantB == 0) || (expA == 255 && mantA != 0) || (expB == 255 && mantB != 0)) {
-        return INF;
+    if ((expA == 0 && mantA == 0) || (expB == 0 && mantB == 0)) {
+        return 0u;
     }
 
-    if (expA == 0 && mantA == 0) {
-        return 0u;
-    }
-    if (expB == 255 && mantB == 0) {
-        return 0u;
-    }
-    if (expA == 255 && mantA == 0) {
-        return (sign << 31) | INF;
+    if (expA == 255 || expB == 255) {
+        return INF;
     }
 
     uint32_t fullMantA = reconstructMantissa(numA);
@@ -137,33 +132,32 @@ uint32_t divideIEEE754(uint32_t numA, uint32_t numB) {
 
     int32_t biasedExpA = expA == 0 ? 1 : static_cast<int32_t>(expA);
     int32_t biasedExpB = expB == 0 ? 1 : static_cast<int32_t>(expB);
-    int32_t resultExp = biasedExpA - biasedExpB + 127;
+    int32_t resultExp = biasedExpA + biasedExpB - 127;
 
-    if (fullMantB == 0) {
-        return INF;
-    }
+    uint64_t product = static_cast<uint64_t>(fullMantA) * static_cast<uint64_t>(fullMantB);
+    uint32_t resultMant;
 
-    uint64_t quotient = (static_cast<uint64_t>(fullMantA) << 23) / fullMantB;
-    uint32_t resultMant = static_cast<uint32_t>(quotient);
-
-    if (resultMant & (1u << 24)) {
-        resultMant >>= 1;
+    if (product & (1ull << 47)) {
+        resultMant = static_cast<uint32_t>(product >> 24);
         resultExp++;
+    } else {
+        resultMant = static_cast<uint32_t>(product >> 23);
     }
 
-    while (resultMant > 0 && (resultMant & (1u << 23)) == 0) {
+    while (resultMant > 0 && (resultMant & (1u << 23)) == 0 && resultExp > 0) {
         resultMant <<= 1;
         resultExp--;
     }
 
-    if (resultMant == 0 || resultExp <= 0) {
+    if (resultExp <= 0 || resultMant == 0) {
         return 0u;
     }
     if (resultExp >= 255) {
-        return (sign << 31) | INF;
+        return INF;
     }
 
     resultMant &= 0x7FFFFF;
     return (sign << 31) | (static_cast<uint32_t>(resultExp) << 23) | resultMant;
 }
+
 #endif
