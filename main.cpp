@@ -73,7 +73,7 @@ int main() {
                 }
                 case 3:
                     result = multiplyIEEE754(a, b);
-                    cout << "\n[!] Multiplicacion aun no implementada." << endl;
+                    printResult("Multiplicacion", result);
                     break;
                 case 4:
                     result = divide(a, b);
