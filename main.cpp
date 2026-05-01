@@ -65,12 +65,10 @@ int main() {
                     result = add(a, b);
                     printResult("Suma", result);
                     break;
-                case 2: {
-                    uint32_t bInv = b ^ (1U << 31);
-                    result = add(a, bInv);
+                case 2:
+                    result = subtractIEEE754(a, b);
                     printResult("Resta", result);
                     break;
-                }
                 case 3:
                     result = multiplyIEEE754(a, b);
                     printResult("Multiplicacion", result);
